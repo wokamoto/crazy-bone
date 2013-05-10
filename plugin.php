@@ -386,7 +386,7 @@ jQuery(function(){setTimeout('get_ull_info()', 30000);});
 		$hour = intval($tt / self::SEC_HOUR);
 		if ($hour  < -1) {
 			$nicetime .= (!empty($nicetime) ? ' ' : '' ) . sprintf(__('%d hours', self::TEXT_DOMAIN), abs($hour));
-			$tt = ($dest + abs($year) * self::SEC_HOUR) - $sour;
+			$tt = ($dest + abs($hour) * self::SEC_HOUR) - $sour;
 		} else if ($hour == -1) {
 			$nicetime .= (!empty($nicetime) ? ' ' : '' ) . __('one hour', self::TEXT_DOMAIN);
 			$tt = ($dest + self::SEC_HOUR) - $sour;
