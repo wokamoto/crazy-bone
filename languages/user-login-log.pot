@@ -1,0 +1,126 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: user-login-log\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2013-05-09 17:31+0900\n"
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Crazy Bone"
+msgstr ""
+
+msgid "Tracks user name, time of login, IP address and browser user agent."
+msgstr ""
+
+#: ../plugin.php:148
+#, php-format
+msgid "Last login: %s%s%s"
+msgstr ""
+
+#: ../plugin.php:273 ../plugin.php:490
+msgid "Login Log"
+msgstr ""
+
+#: ../plugin.php:308 ../plugin.php:429
+msgid "UNKNOWN"
+msgstr ""
+
+#: ../plugin.php:313
+msgid "Unknown"
+msgstr ""
+
+#: ../plugin.php:358
+#, php-format
+msgid "%d years"
+msgstr ""
+
+#: ../plugin.php:361
+msgid "one year"
+msgstr ""
+
+#: ../plugin.php:367
+#, php-format
+msgid "%d months"
+msgstr ""
+
+#: ../plugin.php:370
+msgid "one month"
+msgstr ""
+
+#: ../plugin.php:376
+#, php-format
+msgid "%d days"
+msgstr ""
+
+#: ../plugin.php:379
+msgid "one day"
+msgstr ""
+
+#: ../plugin.php:385
+#, php-format
+msgid "%d hours"
+msgstr ""
+
+#: ../plugin.php:388
+msgid "one hour"
+msgstr ""
+
+#: ../plugin.php:394
+#, php-format
+msgid "%d minutes"
+msgstr ""
+
+#: ../plugin.php:396
+msgid "one minute"
+msgstr ""
+
+#: ../plugin.php:399
+msgid "Just now!"
+msgstr ""
+
+#: ../plugin.php:399
+#, php-format
+msgid "%s ago."
+msgstr ""
+
+#: ../plugin.php:404
+#, php-format
+msgid "<img src=\"%1$s\" alt=\"%2$s\" title=\"%3$s\" style=\"%4$s\" %5$s/>"
+msgstr ""
+
+#: ../plugin.php:468
+msgid "&laquo;"
+msgstr ""
+
+#: ../plugin.php:469
+msgid "&raquo;"
+msgstr ""
+
+#: ../plugin.php:505 ../plugin.php:517
+msgid "User Name"
+msgstr ""
+
+#: ../plugin.php:507 ../plugin.php:519
+msgid "Date"
+msgstr ""
+
+#: ../plugin.php:508 ../plugin.php:520
+msgid "Status"
+msgstr ""
+
+#: ../plugin.php:509 ../plugin.php:521
+msgid "IP"
+msgstr ""
+
+#: ../plugin.php:510 ../plugin.php:522
+msgid "User Agent"
+msgstr ""
+
+#: ../plugin.php:511 ../plugin.php:523
+msgid "Errors"
+msgstr ""
+
+msgid "All Users"
+msgstr ""

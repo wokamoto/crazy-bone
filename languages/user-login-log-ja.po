@@ -1,0 +1,135 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: user-login-log\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2013-05-10 10:07+0900\n"
+"PO-Revision-Date: 2013-05-10 12:25+0900\n"
+"Last-Translator: wokamoto <wokamoto1973@gmail.com>\n"
+"Language-Team: JAPANESE <http://wppluginsj.sourceforge.jp/>\n"
+"Language: ja_JP\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-SourceCharset: utf-8\n"
+"X-Poedit-KeywordsList: __;_e\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-SearchPath-0: ..\n"
+
+msgid "Crazy Bone"
+msgstr "Crazy Bone (狂骨)"
+
+msgid "Tracks user name, time of login, IP address and browser user agent."
+msgstr ""
+"このプラグインは、ログイン・ログアウト時のユーザー名、日時、IPアドレス、ユー"
+"ザーエージェントを記録します。"
+
+#: ../plugin.php:148
+#, php-format
+msgid "Last login: %s%s%s"
+msgstr "最終ログイン: %s%s%s"
+
+#: ../plugin.php:273 ../plugin.php:490
+msgid "Login Log"
+msgstr "ログイン履歴"
+
+#: ../plugin.php:308 ../plugin.php:429
+msgid "UNKNOWN"
+msgstr "不明"
+
+#: ../plugin.php:313
+msgid "Unknown"
+msgstr "不明"
+
+#: ../plugin.php:358
+#, php-format
+msgid "%d years"
+msgstr "%d年"
+
+#: ../plugin.php:361
+msgid "one year"
+msgstr "1年"
+
+#: ../plugin.php:367
+#, php-format
+msgid "%d months"
+msgstr "%dヶ月"
+
+#: ../plugin.php:370
+msgid "one month"
+msgstr "1ヶ月"
+
+#: ../plugin.php:376
+#, php-format
+msgid "%d days"
+msgstr "%d日"
+
+#: ../plugin.php:379
+msgid "one day"
+msgstr "1日"
+
+#: ../plugin.php:385
+#, php-format
+msgid "%d hours"
+msgstr "%d時間"
+
+#: ../plugin.php:388
+msgid "one hour"
+msgstr "1時間"
+
+#: ../plugin.php:394
+#, php-format
+msgid "%d minutes"
+msgstr "%d分"
+
+#: ../plugin.php:396
+msgid "one minute"
+msgstr "1分"
+
+#: ../plugin.php:399
+msgid "Just now!"
+msgstr "たった今"
+
+#: ../plugin.php:399
+#, php-format
+msgid "%s ago."
+msgstr "%s前"
+
+#: ../plugin.php:404
+#, php-format
+msgid "<img src=\"%1$s\" alt=\"%2$s\" title=\"%3$s\" style=\"%4$s\" %5$s/>"
+msgstr "<img src=\"%1$s\" alt=\"%2$s\" title=\"%3$s\" style=\"%4$s\" %5$s/>"
+
+#: ../plugin.php:468
+msgid "&laquo;"
+msgstr "&laquo;"
+
+#: ../plugin.php:469
+msgid "&raquo;"
+msgstr "&raquo;"
+
+#: ../plugin.php:505 ../plugin.php:517
+msgid "User Name"
+msgstr "ユーザー名"
+
+#: ../plugin.php:507 ../plugin.php:519
+msgid "Date"
+msgstr "日時"
+
+#: ../plugin.php:508 ../plugin.php:520
+msgid "Status"
+msgstr "ステータス"
+
+#: ../plugin.php:509 ../plugin.php:521
+msgid "IP"
+msgstr "IP アドレス"
+
+#: ../plugin.php:510 ../plugin.php:522
+msgid "User Agent"
+msgstr "ユーザーエージェント"
+
+#: ../plugin.php:511 ../plugin.php:523
+msgid "Errors"
+msgstr "エラー"
+
+msgid "All Users"
+msgstr "全て"
