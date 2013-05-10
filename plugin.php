@@ -118,7 +118,7 @@ CREATE TABLE `{$this->ull_table}` (
 			return;
 
 		$wp_admin_bar->add_menu(array(
-			'id'     => 'user-login-logging',
+			'id'     => 'user-login-log',
 			'parent' => 'my-account',
 			'title'  => $title,
 			'meta'   => array(),
@@ -260,15 +260,15 @@ function get_ull_info() {
 		type: 'POST',
 		success: function(response){
 			<?php if (self::DEBUG_MODE) echo "console.log(response);\n" ?>
-			jQuery('#wp-admin-bar-user-login-logging a').html(response.content);
-			setTimeout('get_ull_info()', 60000);
+			jQuery('#wp-admin-bar-user-login-log a').html(response.content);
+			setTimeout('get_ull_info()', 30000);
 		},
 		error: function(){
 			setTimeout('get_ull_info()', 10000);
 		}
 	});
 }
-jQuery(function(){setTimeout('get_ull_info()', 60000);});
+jQuery(function(){setTimeout('get_ull_info()', 30000);});
 </script>
 <?php
 	}
