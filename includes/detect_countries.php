@@ -25,7 +25,7 @@ License:
 */
 
 if ( !class_exists('ip2country') )
-	require_once( dirname( __FILE__ ) . '/ip2c/ip2c.php' );
+	require_once( dirname(__FILE__) . '/ip2c/ip2c.php' );
 
 class DetectCountriesController {
 	private $ip2c;
@@ -40,7 +40,7 @@ class DetectCountriesController {
 	***********************************************************/
 	function __construct() {
 		// Check ip-to-country.bin file
-		$ip2c_bin_file = $this->ip2c_dir . self::IP2C_BIN_FILE;
+		$ip2c_bin_file = dirname(__FILE__) . '/ip2c/' .self::IP2C_BIN_FILE;
 		if ( !file_exists($ip2c_bin_file) ) {
 			$ip2c_bin_file = null;
 		}
