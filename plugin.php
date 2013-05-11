@@ -4,7 +4,7 @@ Plugin Name: Crazy Bone
 Plugin URI: 
 Description: Tracks user name, time of login, IP address and browser user agent.
 Author: wokamoto
-Version: 0.1.0
+Version: 0.1.1
 Author URI: http://dogmap.jp/
 Text Domain: user-login-log
 Domain Path: /languages/
@@ -97,14 +97,17 @@ CREATE TABLE `{$this->ull_table}` (
  `country_name` varchar(100) NULL,
  `country_code` varchar(10) NULL,
  PRIMARY KEY (`ID`),
- KEY `activity_status` (`activity_status`)
+ KEY `user_id` (`user_id`),
+ KEY `activity_status` (`activity_status`),
+ KEY `activity_date` (`activity_date`),
+ KEY `country_code` (`country_code`)
 )");
 		}
 	}
 
 	public function admin_bar_init() {
 		add_action('admin_bar_menu',  array(&$this, 'customize_admin_bar_menu'), 9999);
-		wp_enqueue_style('user_login_log', plugins_url('css/user_login_log.css', __FILE__ ), array(), '20130508');
+		wp_enqueue_style('user_login_log', plugins_url('css/user_login_log.css', __FILE__), array(), '20130508');
 		wp_enqueue_script('jquery');
 	}
 
