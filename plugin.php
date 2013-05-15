@@ -4,7 +4,7 @@ Plugin Name: Crazy Bone
 Plugin URI: 
 Description: Tracks user name, time of login, IP address and browser user agent.
 Author: wokamoto
-Version: 0.1.2
+Version: 0.2.0
 Author URI: http://dogmap.jp/
 Text Domain: user-login-log
 Domain Path: /languages/
@@ -13,7 +13,7 @@ License:
  Released under the GPL license
   http://www.gnu.org/copyleft/gpl.html
 
-  Copyright 2012 (email : wokamoto1973@gmail.com)
+  Copyright 2013 (email : wokamoto1973@gmail.com)
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -38,9 +38,9 @@ load_plugin_textdomain(user_login_log::TEXT_DOMAIN, false, dirname(plugin_basena
 
 class user_login_log {
 	const USER_META_KEY = 'user_login_log';
-	const DEBUG_MODE    = true;
 	const TEXT_DOMAIN   = 'user-login-log';
 	const LIST_PER_PAGE = 20;
+	const DEBUG_MODE    = false;
 
 	const SEC_MINUITE   = 60;
 	const SEC_HOUR      = 3600;
@@ -50,22 +50,32 @@ class user_login_log {
 
 	private $ull_table = 'user_login_log';
 	private $admin_action;
+	private $plugin_version;
 
 	function __construct(){
 		global $wpdb;
 
 		$this->ull_table = $wpdb->prefix.$this->ull_table;
+		$this->admin_action = admin_url('profile.php') . '?page=' . plugin_basename(__FILE__);
+
+		$data = get_file_data(__FILE__, array('version' => 'Version'));
+		$this->plugin_version = isset($data['version']) ? $data['version'] : '';
 
 		add_action('wp_login', array(&$this, 'user_login_log'), 10, 2);
 		add_action('wp_authenticate', array(&$this, 'wp_authenticate_log'), 10, 2);
 		add_action('login_form_logout', array(&$this, 'user_logout_log'));
 
+		add_action('admin_enqueue_scripts', array(&$this,'enqueue_scripts'));
+		add_action('wp_enqueue_scripts', array(&$this,'enqueue_scripts'));
+
 		add_action('admin_bar_init',  array(&$this, 'admin_bar_init'), 9999);
-		add_action('wp_enqueue_scripts',  array(&$this, 'enqueue_scripts'));
 		add_action('admin_menu', array(&$this,'add_admin_menu'));
 
 		add_action('wp_ajax_ull_info', array(&$this, 'ajax_info'));
 		add_action('wp_ajax_nopriv_ull_info', array(&$this, 'ajax_info'));
+
+		add_action('wp_ajax_dismiss-ull-wp-pointer', array(&$this, 'ajax_dismiss'));
+		add_action('wp_ajax_nopriv_dismiss-ull-wp-pointer', array(&$this, 'ajax_dismiss'));
 
 		register_activation_hook(__FILE__, array(&$this, 'activate'));
 		register_deactivation_hook(__FILE__, array(&$this, 'deactivate'));
@@ -105,14 +115,21 @@ CREATE TABLE `{$this->ull_table}` (
 		}
 	}
 
-	public function admin_bar_init() {
-		add_action('admin_bar_menu',  array(&$this, 'customize_admin_bar_menu'), 9999);
-		wp_enqueue_style('user_login_log', plugins_url('css/user_login_log.css', __FILE__), array(), '20130508');
+	public function enqueue_scripts(){
+		if (!is_user_logged_in())
+			return;
+
+		wp_enqueue_style('wp-pointer');
 		wp_enqueue_script('jquery');
+		wp_enqueue_script('wp-pointer', array('jquery'));
 	}
 
-	public function enqueue_scripts(){
-		wp_enqueue_script('jquery');
+	public function admin_bar_init() {
+		add_action('admin_bar_menu',  array(&$this, 'customize_admin_bar_menu'), 9999);
+		wp_enqueue_style('user_login_log', plugins_url('css/user_login_log.css', __FILE__), array(), $this->plugin_version);
+
+		add_action('admin_footer', array(&$this, 'footer_js'));
+		add_action('wp_footer',    array(&$this, 'footer_js'));
 	}
 
 	public function customize_admin_bar_menu($wp_admin_bar){
@@ -127,12 +144,9 @@ CREATE TABLE `{$this->ull_table}` (
 			'meta'   => array(),
 			'href'   => $this->admin_action,
 		));
-
-		add_action('admin_footer', array(&$this, 'footer_js'));
-		add_action('wp_footer',    array(&$this, 'footer_js'));
 	}
 
-	private function login_info() {
+	private function last_login_info() {
 		$user = wp_get_current_user();
 		if (is_wp_error($user))
 			return false;
@@ -144,6 +158,19 @@ CREATE TABLE `{$this->ull_table}` (
 		$date = isset($login_log['Date']) ? strtotime($login_log['Date']) : time();
 		$ip   = isset($login_log['IP']) ? $login_log['IP'] : '';
 		$ua   = isset($login_log['User Agent']) ? $login_log['User Agent'] : '';
+
+		return array('date' => $date, 'ip' => $ip, 'ua' => $ua);
+	}
+
+	private function login_info($args = '') {
+		$user = wp_get_current_user();
+		if (is_wp_error($user))
+			return false;
+		if (empty($args))
+			$args = $this->last_login_info();
+		$date = isset($args['date']) ? $args['date'] : $this->time();
+		$ip = isset($args['ip']) ? $args['ip'] : $this->ip();
+		$ua = isset($args['ua']) ? $args['ua'] : $this->ua();
 
 		list($browser_name, $browser_code, $browser_ver, $os_name, $os_code, $os_ver, $pda_name, $pda_code, $pda_ver) = $this->detect_browser($ua);
 		list($country_name, $country_code) = $this->detect_country($ip);
@@ -241,18 +268,49 @@ CREATE TABLE `{$this->ull_table}` (
 	}
 
 	public function ajax_info(){
-		$content = $this->login_info();
+		if (!is_user_logged_in())
+			return;
+
+		$args = $this->last_login_info();
+		$content = $this->login_info($args);
 		if ($content === false)
 			wp_die('Not logged in.');
 
+		$transient_key = 'ull-dismiss-'.md5($this->ip().(isset($args['ip']) ? $args['ip'] : ''));
+		$dismiss = get_transient($transient_key);
+
 	    header('Content-Type: application/json; charset='.get_option('blog_charset'));
-	    echo json_encode(array('content' => $content));
+	    echo json_encode(array(
+			'content'        => $content,
+			'new_login_IP'   => isset($args['ip']) ? $args['ip'] : '',
+			'new_login_time' => isset($args['date']) ? $this->nice_time($args['date']) : '',
+			'login_IP'       => $this->ip(),
+			'dismiss'        => $dismiss,
+			));
 	    die();
+	}
+
+	public function ajax_dismiss(){
+		if (!is_user_logged_in())
+			return;
+
+		$args = $this->last_login_info();
+		$transient_key = 'ull-dismiss-'.md5($this->ip().(isset($args['ip']) ? $args['ip'] : ''));
+		set_transient($transient_key, TRUE, 60 * 60);
+		die();
 	}
 
 	public function footer_js(){
 		if (!is_user_logged_in())
 			return;
+
+		$args = $this->last_login_info();
+		$transient_key = 'ull-dismiss-'.md5($this->ip().(isset($args['ip']) ? $args['ip'] : ''));
+		$dismiss = get_transient($transient_key);
+		$caution =
+			"'<h3>" . __('他のIPアドレスからログインされました', self::TEXT_DOMAIN) . "</h3>".
+			"<p>" . __('ログインしてきたIPアドレス:', self::TEXT_DOMAIN) . "' + response.new_login_IP + '<br/>" .
+			__('現在のIPアドレス:', self::TEXT_DOMAIN) . "' + response.login_IP + '</p>'";
 ?>
 <script type="text/javascript">
 function get_ull_info() {
@@ -262,16 +320,28 @@ function get_ull_info() {
 		dataType: 'json',
 		type: 'POST',
 		success: function(response){
-			<?php if (self::DEBUG_MODE) echo "console.log(response);\n" ?>
+<?php if (self::DEBUG_MODE) echo "\t\t\tconsole.log(response);\n" ?>
+			if (!response.dismiss && response.login_IP !== response.new_login_IP) {
+				jQuery('#wp-admin-bar-my-account').pointer({
+					content: <?php echo $caution; ?>,
+					close: function(){
+						jQuery.post('<?php echo admin_url('admin-ajax.php'); ?>', {
+							action: 'dismiss-ull-wp-pointer',
+						});
+						setTimeout('get_ull_info()', 30000);
+					}
+				}).pointer('open');
+			} else {
+				setTimeout('get_ull_info()', 30000);
+			}
 			jQuery('#wp-admin-bar-user-login-log a').html(response.content);
-			setTimeout('get_ull_info()', 30000);
 		},
 		error: function(){
 			setTimeout('get_ull_info()', 10000);
 		}
 	});
 }
-jQuery(function(){setTimeout('get_ull_info()', 30000);});
+jQuery(function(){setTimeout('get_ull_info()', 10000);});
 </script>
 <?php
 	}
@@ -282,7 +352,6 @@ jQuery(function(){setTimeout('get_ull_info()', 30000);});
 		$page_title = __('Login Log', self::TEXT_DOMAIN);
 		$menu_title = $page_title;
 		$file = plugin_basename(__FILE__);
-		$this->admin_action = admin_url($parent) . '?page=' . plugin_basename(__FILE__);
 		$this->add_submenu_page(
 			$parent,
 			$page_title,
