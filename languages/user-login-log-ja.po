@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: user-login-log\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2013-05-10 10:07+0900\n"
-"PO-Revision-Date: 2013-05-10 12:25+0900\n"
+"PO-Revision-Date: 2013-05-16 09:56+0900\n"
 "Last-Translator: wokamoto <wokamoto1973@gmail.com>\n"
 "Language-Team: JAPANESE <http://wppluginsj.sourceforge.jp/>\n"
 "Language: ja_JP\n"
@@ -13,6 +13,7 @@ msgstr ""
 "X-Poedit-SourceCharset: utf-8\n"
 "X-Poedit-KeywordsList: __;_e\n"
 "X-Poedit-Basepath: .\n"
+"X-Generator: Poedit 1.5.5\n"
 "X-Poedit-SearchPath-0: ..\n"
 
 msgid "Crazy Bone"
@@ -133,3 +134,15 @@ msgstr "エラー"
 
 msgid "All Users"
 msgstr "全て"
+
+msgid "Caution!"
+msgstr "警告!"
+
+msgid "Someone has logged in from another IP."
+msgstr "他のIPアドレスからログインされました"
+
+msgid "The someone's IP address :"
+msgstr "ログインしてきた IP アドレス:"
+
+msgid "Your current IP address :"
+msgstr "現在の IP アドレス:"

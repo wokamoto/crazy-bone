@@ -281,11 +281,13 @@ CREATE TABLE `{$this->ull_table}` (
 
 	    header('Content-Type: application/json; charset='.get_option('blog_charset'));
 	    echo json_encode(array(
-			'content'        => $content,
-			'new_login_IP'   => isset($args['ip']) ? $args['ip'] : '',
-			'new_login_time' => isset($args['date']) ? $this->nice_time($args['date']) : '',
-			'login_IP'       => $this->ip(),
-			'dismiss'        => $dismiss,
+			'content'       => $content,
+			'login_IP'      => isset($args['ip']) ? $args['ip'] : '',
+			'login_country' => isset($args['ip']) ? $this->get_country_flag($args['ip']) : '',
+			'login_time'    => isset($args['date']) ? $this->nice_time($args['date']) : '',
+			'IP'            => $this->ip(),
+			'country'       => $this->get_country_flag($this->ip()),
+			'dismiss'       => $dismiss,
 			));
 	    die();
 	}
@@ -307,10 +309,17 @@ CREATE TABLE `{$this->ull_table}` (
 		$args = $this->last_login_info();
 		$transient_key = 'ull-dismiss-'.md5($this->ip().(isset($args['ip']) ? $args['ip'] : ''));
 		$dismiss = get_transient($transient_key);
-		$caution =
-			"'<h3>" . __('他のIPアドレスからログインされました', self::TEXT_DOMAIN) . "</h3>".
-			"<p>" . __('ログインしてきたIPアドレス:', self::TEXT_DOMAIN) . "' + response.new_login_IP + '<br/>" .
-			__('現在のIPアドレス:', self::TEXT_DOMAIN) . "' + response.login_IP + '</p>'";
+		$caution = sprintf(
+			"<h3>%s</h3><p>%s (' + res.login_time + ')</p>".
+			"<p>".
+			"%s' + res.login_country + '<strong>' + res.login_IP + '</strong><br/>".
+			"%s' + res.country + '<strong>' + res.IP + '</strong>".
+			"</p>",
+			__('Caution!', self::TEXT_DOMAIN),
+			__('Someone has logged in from another IP.', self::TEXT_DOMAIN),
+			__("The someone's IP address :", self::TEXT_DOMAIN),
+			__('Your current IP address :', self::TEXT_DOMAIN)
+			);
 ?>
 <script type="text/javascript">
 function get_ull_info() {
@@ -319,11 +328,11 @@ function get_ull_info() {
 		cache: false,
 		dataType: 'json',
 		type: 'POST',
-		success: function(response){
-<?php if (self::DEBUG_MODE) echo "\t\t\tconsole.log(response);\n" ?>
-			if (!response.dismiss && response.login_IP !== response.new_login_IP) {
+		success: function(res){
+<?php if (self::DEBUG_MODE) echo "\t\t\tconsole.log(res);\n" ?>
+			if (!res.dismiss && res.IP !== res.login_IP) {
 				jQuery('#wp-admin-bar-my-account').pointer({
-					content: <?php echo $caution; ?>,
+					content: '<?php echo $caution; ?>',
 					close: function(){
 						jQuery.post('<?php echo admin_url('admin-ajax.php'); ?>', {
 							action: 'dismiss-ull-wp-pointer',
@@ -334,7 +343,7 @@ function get_ull_info() {
 			} else {
 				setTimeout('get_ull_info()', 30000);
 			}
-			jQuery('#wp-admin-bar-user-login-log a').html(response.content);
+			jQuery('#wp-admin-bar-user-login-log a').html(res.content);
 		},
 		error: function(){
 			setTimeout('get_ull_info()', 10000);

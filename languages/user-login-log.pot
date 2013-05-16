@@ -124,3 +124,15 @@ msgstr ""
 
 msgid "All Users"
 msgstr ""
+
+msgid "Caution!"
+msgstr ""
+
+msgid "Someone has logged in from another IP."
+msgstr ""
+
+msgid "The someone's IP address :"
+msgstr ""
+
+msgid "Your current IP address :"
+msgstr ""
