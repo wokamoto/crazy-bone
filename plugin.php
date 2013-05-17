@@ -4,7 +4,7 @@ Plugin Name: Crazy Bone
 Plugin URI: https://github.com/wokamoto/crazy-bone
 Description: Tracks user name, time of login, IP address and browser user agent.
 Author: wokamoto
-Version: 0.4.0
+Version: 0.4.1
 Author URI: http://dogmap.jp/
 Text Domain: user-login-log
 Domain Path: /languages/
@@ -329,7 +329,7 @@ function get_ull_info() {
 		dataType: 'json',
 		type: 'POST',
 		success: function(res){
-<?php if (self::DEBUG_MODE) echo "€t€t€tconsole.log(res);€n" ?>
+<?php if (self::DEBUG_MODE) echo "\t\t\tconsole.log(res);\n" ?>
 			if (!res.dismiss && res.IP !== res.login_IP) {
 				jQuery('#wp-admin-bar-my-account').pointer({
 					content: '<?php echo $caution; ?>',
@@ -494,13 +494,14 @@ jQuery(function(){setTimeout('get_ull_info()', 10000);});
 	}
 
 	// Get country flag
-	public static function get_country_flag($ip, $class = '') {
+	public static function get_country_flag($ip, $class = '', $show_country_name = false) {
 		list($country_name, $country_code) = self::detect_country($ip);
 
 		$icon_dir = plugins_url('images/flags/', __FILE__);
 		$style    = 'width:16px;height:11px;';
 
-		return self::icon_img_tag($icon_dir.strtolower($country_code).'.png', "{$country_name} ({$ip})", "{$country_name} ({$ip})", $style, $class);
+		return self::icon_img_tag($icon_dir.strtolower($country_code).'.png', "{$country_name} ({$ip})", "{$country_name} ({$ip})", $style, $class).
+			($show_country_name ? "&nbsp;{$country_name}" : '');
 	}
 
 	// Get browser icon
@@ -540,20 +541,20 @@ jQuery(function(){setTimeout('get_ull_info()', 10000);});
 
 		$selectd = ' selected="selected"';
 
-		echo '<select name="user_id">'."€n";
-		printf('<option value="%d"%s>%s</option>'."€n", -1, $selected_user_id == -1 ? $selectd : '', __('All Users', self::TEXT_DOMAIN));
-		printf('<option value="%d"%s>%s</option>'."€n", 0, $selected_user_id == 0 ? $selectd : '', __('Unknown', self::TEXT_DOMAIN));
+		echo '<select name="user_id">'."\n";
+		printf('<option value="%d"%s>%s</option>'."\n", -1, $selected_user_id == -1 ? $selectd : '', __('All Users', self::TEXT_DOMAIN));
+		printf('<option value="%d"%s>%s</option>'."\n", 0, $selected_user_id == 0 ? $selectd : '', __('Unknown', self::TEXT_DOMAIN));
 		$users = $wpdb->get_results("select ID, user_login from `{$wpdb->users}` order by ID");
 		foreach((array)$users as $user) {
-			printf('<option value="%d"%s>%s</option>'."€n", $user->ID, $selected_user_id == $user->ID ? $selectd : '', $user->user_login);
+			printf('<option value="%d"%s>%s</option>'."\n", $user->ID, $selected_user_id == $user->ID ? $selectd : '', $user->user_login);
 		}
-		echo "</select>€n";
+		echo "</select>\n";
 
-		echo '<select name="status">'."€n";
+		echo '<select name="status">'."\n";
 		foreach (array('', 'login', 'logout', 'login_error') as $status) {
-			printf('<option value="%1$s"%2$s>%1$s</option>'."€n", $status, $selected_status == $status ? ' selected="selected"' : '');
+			printf('<option value="%1$s"%2$s>%1$s</option>'."\n", $status, $selected_status == $status ? ' selected="selected"' : '');
 		}
-		echo "</select>€n";
+		echo "</select>\n";
 	}
 
 	// Pagination
@@ -638,7 +639,7 @@ jQuery(function(){setTimeout('get_ull_info()', 10000);});
 				$wpdb->query($sql);
 
 				$err_message = sprintf(
-					'<div id="message" class="updated fade"><p><strong>%s</strong></p></div>'."€n",
+					'<div id="message" class="updated fade"><p><strong>%s</strong></p></div>'."\n",
 					empty($err_message) ? __('Done!', self::TEXT_DOMAIN) : $err_message
 					);
 			}
@@ -675,7 +676,7 @@ jQuery(function(){setTimeout('get_ull_info()', 10000);});
 <div class="wrap">
 <div id="icon-profile" class="icon32"></div>
 <h2><?php _e('Login Log', self::TEXT_DOMAIN); ?></h2>
-<?php echo $err_message."€n"; ?>
+<?php echo $err_message."\n"; ?>
 
 <div class="tablenav">
 
@@ -692,7 +693,7 @@ jQuery(function(){setTimeout('get_ull_info()', 10000);});
 <?php if (current_user_can('manage_options')) { ?>
 <div class="alignleft actions">
 <form action="" method="post">
-<?php echo wp_nonce_field($nonce_action, $nonce_name, true, false) . "€n"; ?>
+<?php echo wp_nonce_field($nonce_action, $nonce_name, true, false) . "\n"; ?>
 <input type="hidden" name="user_id" value="<?php echo $user_id; ?>" />
 <label for="truncate_date"><?php _e('Truncate Log', self::TEXT_DOMAIN);?></label>
 <input type="text" name="truncate_date" value="<?php echo $truncate_date;?>" size="2" style="text-align:right;" />
@@ -781,7 +782,7 @@ $errors =
 <?php } ?>
 <td class="date column-date"><?php echo $row->activity_date; ?></td>
 <td class="status column-status"><?php echo $row->activity_status; ?></td>
-<td class="ip column-ip"><?php echo trim(self::get_country_flag($row->activity_IP) . '<br>' . $row->activity_IP); ?></td>
+<td class="ip column-ip"><?php echo trim(self::get_country_flag($row->activity_IP, '', true) . '<br>' . $row->activity_IP); ?></td>
 <td class="agent column-agent"><?php echo trim(self::get_browser_icon($row->activity_agent) . '<br>' . $ua); ?></td>
 <td class="errors column-errors"><?php echo $errors; ?></td>
 <td class="password column-errors"><?php echo $password; ?></td>
@@ -834,7 +835,7 @@ $errors =
 <div class="wrap">
 <div id="icon-profile" class="icon32"></div>
 <h2><?php _e('Summary Login Log', self::TEXT_DOMAIN); ?></h2>
-<?php echo $err_message."€n"; ?>
+<?php echo $err_message."\n"; ?>
 
 <div class="tablenav">
 <?php if (current_user_can('create_users')) { ?>
