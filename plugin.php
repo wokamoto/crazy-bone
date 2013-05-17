@@ -4,7 +4,7 @@ Plugin Name: Crazy Bone
 Plugin URI: 
 Description: Tracks user name, time of login, IP address and browser user agent.
 Author: wokamoto
-Version: 0.2.0
+Version: 0.3.0
 Author URI: http://dogmap.jp/
 Text Domain: user-login-log
 Domain Path: /languages/
@@ -531,6 +531,37 @@ jQuery(function(){setTimeout('get_ull_info()', 10000);});
 	public function option_page() {
 		global $wpdb;
 
+		// Truncate Log
+		$nonce_action  = 'truncate_logs';
+		$nonce_name    = '_wpnonce_truncate_logs';
+		$truncate_date = '';
+		$err_message   = '';
+		if (current_user_can('manage_options') && isset($_POST['truncate_date']) && check_admin_referer($nonce_action, $nonce_name)) {
+			if (is_numeric($_POST['truncate_date'])) {
+				$user_id = intval($_POST['user_id']);
+				$truncate_date = intval($_POST['truncate_date']);
+				if ($user_id < 0) {
+					$sql = $wpdb->prepare(
+						"DELETE FROM {$this->ull_table} WHERE `activity_date` <= DATE_SUB(NOW(), INTERVAL %d day)",
+						$truncate_date
+						);
+				} else {
+					$sql = $wpdb->prepare(
+						"DELETE FROM {$this->ull_table} WHERE `activity_date` <= DATE_SUB(NOW(), INTERVAL %d day) AND `user_id` = %d",
+						$truncate_date,
+						$user_id
+						);
+				}
+				$wpdb->query($sql);
+
+				$err_message = sprintf(
+					'<div id="message" class="updated fade"><p><strong>%s</strong></p></div>'."\n",
+					empty($err_message) ? __('Done!', self::TEXT_DOMAIN) : $err_message
+					);
+			}
+		}
+
+		// Pagination
 		$page = abs(intval(isset($_GET['apage']) ? $_GET['apage'] : 1));
 		$per_page = self::LIST_PER_PAGE;
 		$start = ($page - 1) * $per_page;
@@ -545,10 +576,10 @@ jQuery(function(){setTimeout('get_ull_info()', 10000);});
 			$user_id = intval($user->ID);
 		}
 
-		$sql = " from `{$this->ull_table}` left join `{$wpdb->users}` on `{$this->ull_table}`.`user_id` = `{$wpdb->users}`.`ID`";
+		$sql = " FROM `{$this->ull_table}` LEFT JOIN `{$wpdb->users}` ON `{$this->ull_table}`.`user_id` = `{$wpdb->users}`.`ID`";
 		if ($user_id >= 0)
-			$sql .= $wpdb->prepare(" where `user_id` = %d", $user_id);
-		$total = intval($wpdb->get_var("select count(`{$this->ull_table}`.`ID`)".$sql));
+			$sql .= $wpdb->prepare(" WHERE `user_id` = %d", $user_id);
+		$total = intval($wpdb->get_var("SELECT count(`{$this->ull_table}`.`ID`)".$sql));
 		$page_links = paginate_links( array(
 			'base' => add_query_arg( 'apage', '%#%' ) ,
 			'format' => '' ,
@@ -565,8 +596,8 @@ jQuery(function(){setTimeout('get_ull_info()', 10000);});
 			$page_links
 		);
 
-		$sql = 'select `user_login`, `activity_date`, `activity_status`, `activity_IP`, `activity_agent`, `activity_errors`'.
-			$sql.' order by `activity_date` DESC'.
+		$sql = 'SELECT `user_login`, `activity_date`, `activity_status`, `activity_IP`, `activity_agent`, `activity_errors`'.
+			$sql.' ORDER BY `activity_date` DESC'.
 			' limit '.$start.','.self::LIST_PER_PAGE;
 
 		$ull = $wpdb->get_results($sql);
@@ -575,8 +606,10 @@ jQuery(function(){setTimeout('get_ull_info()', 10000);});
 <div class="wrap">
 <div id="icon-profile" class="icon32"></div>
 <h2><?php _e('Login Log', self::TEXT_DOMAIN); ?></h2>
+<?php echo $err_message."\n"; ?>
 
 <div class="tablenav">
+
 <?php if (current_user_can('create_users')) { ?>
 <div class="alignleft actions">
 <form action="" method="get">
@@ -591,10 +624,24 @@ jQuery(function(){setTimeout('get_ull_info()', 10000);});
 		}
 ?>
 </select>
-<?php submit_button( __( 'Apply Filters' ), 'action', false, false, array( 'id' => "doaction" ) );?>
+<?php submit_button(__('Apply Filters'), 'action', false, false, array('id' => "doaction"));?>
 </form>
 </div>
 <?php } ?>
+
+<?php if (current_user_can('manage_options')) { ?>
+<div class="alignleft actions">
+<form action="" method="post">
+<?php echo wp_nonce_field($nonce_action, $nonce_name, true, false) . "\n"; ?>
+<input type="hidden" name="user_id" value="<?php echo $user_id; ?>" />
+<label for="truncate_date"><?php _e('Truncate Log', self::TEXT_DOMAIN);?></label>
+<input type="text" name="truncate_date" value="<?php echo $truncate_date;?>" size="2" />
+<?php _e('days and older.', self::TEXT_DOMAIN);?>&nbsp;
+<?php submit_button(__('Truncate', self::TEXT_DOMAIN), 'action', false, false, array('id' => "truncate"));?>
+</form>
+</div>
+<?php } ?>
+
 <div class="alignright tablenav-pages">
 <?php echo $page_links_text; ?>
 </div>

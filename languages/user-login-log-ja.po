@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: user-login-log\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2013-05-10 10:07+0900\n"
-"PO-Revision-Date: 2013-05-16 09:56+0900\n"
+"PO-Revision-Date: 2013-05-17 14:46+0900\n"
 "Last-Translator: wokamoto <wokamoto1973@gmail.com>\n"
 "Language-Team: JAPANESE <http://wppluginsj.sourceforge.jp/>\n"
 "Language: ja_JP\n"
@@ -146,3 +146,12 @@ msgstr "ログインしてきた IP アドレス:"
 
 msgid "Your current IP address :"
 msgstr "現在の IP アドレス:"
+
+msgid "Truncate Log"
+msgstr "ログイン履歴の消去"
+
+msgid "days and older."
+msgstr "日前"
+
+msgid "Truncate"
+msgstr "消去"

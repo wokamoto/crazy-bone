@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=9S8AJ
 Tags: log, login, users
 Requires at least: 3.5
 Tested up to: 3.5.1
-Stable tag: 0.2.0
+Stable tag: 0.3.0
 
 Tracks user name, time of login, IP address and browser user agent.
 
@@ -33,6 +33,9 @@ none
 1. The admin page
 
 == Changelog == 
+
+**0.3.0 - May 17, 2013**
+Added "Truncate Log" option.
 
 **0.1.0 - May 10, 2013**  
 Initial release.

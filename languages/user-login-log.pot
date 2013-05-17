@@ -136,3 +136,12 @@ msgstr ""
 
 msgid "Your current IP address :"
 msgstr ""
+
+msgid "Truncate Log"
+msgstr ""
+
+msgid "days and older."
+msgstr ""
+
+msgid "Truncate"
+msgstr ""
