@@ -1,10 +1,10 @@
 <?php
 /*
 Plugin Name: Crazy Bone
-Plugin URI: 
+Plugin URI: https://github.com/wokamoto/crazy-bone
 Description: Tracks user name, time of login, IP address and browser user agent.
 Author: wokamoto
-Version: 0.3.0
+Version: 0.4.0
 Author URI: http://dogmap.jp/
 Text Domain: user-login-log
 Domain Path: /languages/
@@ -329,7 +329,7 @@ function get_ull_info() {
 		dataType: 'json',
 		type: 'POST',
 		success: function(res){
-<?php if (self::DEBUG_MODE) echo "\t\t\tconsole.log(res);\n" ?>
+<?php if (self::DEBUG_MODE) echo "€t€t€tconsole.log(res);€n" ?>
 			if (!res.dismiss && res.IP !== res.login_IP) {
 				jQuery('#wp-admin-bar-my-account').pointer({
 					content: '<?php echo $caution; ?>',
@@ -529,43 +529,58 @@ jQuery(function(){setTimeout('get_ull_info()', 10000);});
 	}
 
 	public function option_page() {
+		if (isset($_GET['summary']))
+			$this->summary_page();
+		else
+			$this->login_log_page();
+	}
+
+	private function filter_option($selected_user_id, $selected_status) {
 		global $wpdb;
 
-		// Truncate Log
-		$nonce_action  = 'truncate_logs';
-		$nonce_name    = '_wpnonce_truncate_logs';
-		$truncate_date = '';
-		$err_message   = '';
-		if (current_user_can('manage_options') && isset($_POST['truncate_date']) && check_admin_referer($nonce_action, $nonce_name)) {
-			if (is_numeric($_POST['truncate_date'])) {
-				$user_id = intval($_POST['user_id']);
-				$truncate_date = intval($_POST['truncate_date']);
-				if ($user_id < 0) {
-					$sql = $wpdb->prepare(
-						"DELETE FROM {$this->ull_table} WHERE `activity_date` <= DATE_SUB(NOW(), INTERVAL %d day)",
-						$truncate_date
-						);
-				} else {
-					$sql = $wpdb->prepare(
-						"DELETE FROM {$this->ull_table} WHERE `activity_date` <= DATE_SUB(NOW(), INTERVAL %d day) AND `user_id` = %d",
-						$truncate_date,
-						$user_id
-						);
-				}
-				$wpdb->query($sql);
+		$selectd = ' selected="selected"';
 
-				$err_message = sprintf(
-					'<div id="message" class="updated fade"><p><strong>%s</strong></p></div>'."\n",
-					empty($err_message) ? __('Done!', self::TEXT_DOMAIN) : $err_message
-					);
-			}
+		echo '<select name="user_id">'."€n";
+		printf('<option value="%d"%s>%s</option>'."€n", -1, $selected_user_id == -1 ? $selectd : '', __('All Users', self::TEXT_DOMAIN));
+		printf('<option value="%d"%s>%s</option>'."€n", 0, $selected_user_id == 0 ? $selectd : '', __('Unknown', self::TEXT_DOMAIN));
+		$users = $wpdb->get_results("select ID, user_login from `{$wpdb->users}` order by ID");
+		foreach((array)$users as $user) {
+			printf('<option value="%d"%s>%s</option>'."€n", $user->ID, $selected_user_id == $user->ID ? $selectd : '', $user->user_login);
 		}
+		echo "</select>€n";
 
-		// Pagination
-		$page = abs(intval(isset($_GET['apage']) ? $_GET['apage'] : 1));
-		$per_page = self::LIST_PER_PAGE;
-		$start = ($page - 1) * $per_page;
+		echo '<select name="status">'."€n";
+		foreach (array('', 'login', 'logout', 'login_error') as $status) {
+			printf('<option value="%1$s"%2$s>%1$s</option>'."€n", $status, $selected_status == $status ? ' selected="selected"' : '');
+		}
+		echo "</select>€n";
+	}
 
+	// Pagination
+	private function get_pagenation($total, $per_page, $page, $start = ''){
+		if (empty($start))
+			$start = (intval($page) - 1) * intval($per_page);
+
+		$page_links = paginate_links( array(
+			'base'      => add_query_arg( 'apage', '%#%' ) ,
+			'format'    => '' ,
+			'prev_text' => __('&laquo;') ,
+			'next_text' => __('&raquo;') ,
+			'total'     => ceil(intval($total) / intval($per_page)) ,
+			'current'   => intval($page)
+		));
+
+		$page_links_text = sprintf( '<span class="displaying-num">' . __( 'Displaying %s&#8211;%s of %s' ) . '</span>%s',
+			number_format_i18n( intval($total) > 0 ? intval($start) + 1 : 0 ),
+			number_format_i18n( min(intval($page) * intval($per_page), intval($total)) ),
+			number_format_i18n( intval($total) ),
+			$page_links
+		);
+
+		return $page_links_text;
+	}
+
+	private function get_user_id(){
 		$user_id = 0;
 		if (current_user_can('create_users') && isset($_GET['user_id'])) {
 			$user_id = intval($_GET['user_id']);
@@ -575,38 +590,92 @@ jQuery(function(){setTimeout('get_ull_info()', 10000);});
 				return;
 			$user_id = intval($user->ID);
 		}
+		return $user_id;
+	}
 
-		$sql = " FROM `{$this->ull_table}` LEFT JOIN `{$wpdb->users}` ON `{$this->ull_table}`.`user_id` = `{$wpdb->users}`.`ID`";
+	private function get_status(){
+		$status = '';
+		if (!current_user_can('create_users'))
+			return $status;
+
+		if (isset($_GET['status'])) {
+			switch (strtolower($_GET['status'])){
+			case 'login':
+			case 'logout':
+			case 'login_error':
+				$status = strtolower($_GET['status']);
+				break;
+			default:
+				$status = '';
+			}
+		}
+		return $status;
+	}
+
+	private function login_log_page() {
+		global $wpdb;
+
+		$err_message   = '';
+		$user_id = $this->get_user_id();
+		$status  = $this->get_status();
+
+		// Truncate Log
+		$nonce_action  = 'truncate_logs';
+		$nonce_name    = '_wpnonce_truncate_logs';
+		$truncate_date = '';
+		if (current_user_can('manage_options') && isset($_POST['truncate_date']) && check_admin_referer($nonce_action, $nonce_name)) {
+			if (is_numeric($_POST['truncate_date'])) {
+				$user_id = intval($_POST['user_id']);
+				$truncate_date = intval($_POST['truncate_date']);
+				$sql = $wpdb->prepare(
+					"DELETE FROM {$this->ull_table} WHERE `activity_date` <= DATE_SUB(NOW(), INTERVAL %d day)",
+					$truncate_date
+					);
+				if ($user_id >= 0)
+					$sql .= $wpdb->prepare(" AND `user_id` = %d", $user_id);
+				if (!empty($status))
+					$sql .= $wpdb->prepare(" AND `activity_status` = %s", $status);
+				$wpdb->query($sql);
+
+				$err_message = sprintf(
+					'<div id="message" class="updated fade"><p><strong>%s</strong></p></div>'."€n",
+					empty($err_message) ? __('Done!', self::TEXT_DOMAIN) : $err_message
+					);
+			}
+		}
+
+		// get total count
+		$sql = "
+			FROM `{$this->ull_table}`
+			LEFT JOIN `{$wpdb->users}` ON `{$this->ull_table}`.`user_id` = `{$wpdb->users}`.`ID`
+			WHERE 1 = 1";
 		if ($user_id >= 0)
-			$sql .= $wpdb->prepare(" WHERE `user_id` = %d", $user_id);
-		$total = intval($wpdb->get_var("SELECT count(`{$this->ull_table}`.`ID`)".$sql));
-		$page_links = paginate_links( array(
-			'base' => add_query_arg( 'apage', '%#%' ) ,
-			'format' => '' ,
-			'prev_text' => __('&laquo;') ,
-			'next_text' => __('&raquo;') ,
-			'total' => ceil($total / $per_page) ,
-			'current' => $page
-		));
+			$sql .= $wpdb->prepare(" AND `user_id` = %d", $user_id);
+		if (!empty($status))
+			$sql .= $wpdb->prepare(" AND `activity_status` = %s", $status);
+		$total = intval($wpdb->get_var("SELECT count(`{$this->ull_table}`.`ID`) {$sql}"));
 
-		$page_links_text = sprintf( '<span class="displaying-num">' . __( 'Displaying %s&#8211;%s of %s' ) . '</span>%s',
-			number_format_i18n( $start + 1 ),
-			number_format_i18n( min( $page * $per_page, $total ) ),
-			number_format_i18n( $total ),
-			$page_links
-		);
+		// Pagination
+		$page = abs(intval(isset($_GET['apage']) ? $_GET['apage'] : 1));
+		$start = ($page - 1) * self::LIST_PER_PAGE;
+		$page_links_text = $this->get_pagenation($total, self::LIST_PER_PAGE, $page, $start);
 
-		$sql = 'SELECT `user_login`, `activity_date`, `activity_status`, `activity_IP`, `activity_agent`, `activity_errors`'.
+		// get login log
+		$sql = $wpdb->prepare(
+			'SELECT `user_id`, `user_login`, `activity_date`, `activity_status`, `activity_IP`, `activity_agent`, `activity_errors`'.
 			$sql.' ORDER BY `activity_date` DESC'.
-			' limit '.$start.','.self::LIST_PER_PAGE;
-
+			' LIMIT %d, %d',
+			$start,
+			self::LIST_PER_PAGE
+			);
 		$ull = $wpdb->get_results($sql);
+
 		$row_num = 0;
 ?>
 <div class="wrap">
 <div id="icon-profile" class="icon32"></div>
 <h2><?php _e('Login Log', self::TEXT_DOMAIN); ?></h2>
-<?php echo $err_message."\n"; ?>
+<?php echo $err_message."€n"; ?>
 
 <div class="tablenav">
 
@@ -614,16 +683,7 @@ jQuery(function(){setTimeout('get_ull_info()', 10000);});
 <div class="alignleft actions">
 <form action="" method="get">
 <input type="hidden" name="page" value="<?php echo plugin_basename(__FILE__); ?>" />
-<select name="user_id">
-<option value="-1"<?php if ($user_id == -1) echo ' selected="selected"';?>><?php _e('All Users', self::TEXT_DOMAIN); ?></option>
-<option value="0"<?php if ($user_id == 0) echo ' selected="selected"';?>><?php _e('Unknown', self::TEXT_DOMAIN); ?></option>
-<?php
-		$users = $wpdb->get_results("select ID, user_login from `{$wpdb->users}` order by ID");
-		foreach((array)$users as $user) {
-			printf("<option value=\"%d\"%s>%s</option>\n", $user->ID, $user->ID == $user_id ? ' selected="selected"' : '', $user->user_login);
-		}
-?>
-</select>
+<?php $this->filter_option($user_id, $status); ?>
 <?php submit_button(__('Apply Filters'), 'action', false, false, array('id' => "doaction"));?>
 </form>
 </div>
@@ -632,10 +692,10 @@ jQuery(function(){setTimeout('get_ull_info()', 10000);});
 <?php if (current_user_can('manage_options')) { ?>
 <div class="alignleft actions">
 <form action="" method="post">
-<?php echo wp_nonce_field($nonce_action, $nonce_name, true, false) . "\n"; ?>
+<?php echo wp_nonce_field($nonce_action, $nonce_name, true, false) . "€n"; ?>
 <input type="hidden" name="user_id" value="<?php echo $user_id; ?>" />
 <label for="truncate_date"><?php _e('Truncate Log', self::TEXT_DOMAIN);?></label>
-<input type="text" name="truncate_date" value="<?php echo $truncate_date;?>" size="2" />
+<input type="text" name="truncate_date" value="<?php echo $truncate_date;?>" size="2" style="text-align:right;" />
 <?php _e('days and older.', self::TEXT_DOMAIN);?>&nbsp;
 <?php submit_button(__('Truncate', self::TEXT_DOMAIN), 'action', false, false, array('id' => "truncate"));?>
 </form>
@@ -645,6 +705,21 @@ jQuery(function(){setTimeout('get_ull_info()', 10000);});
 <div class="alignright tablenav-pages">
 <?php echo $page_links_text; ?>
 </div>
+
+<?php if (current_user_can('manage_options')) { ?>
+<div class="alignright tablenav-pages" style="margin-right:1em;">
+<form action="" method="GET">
+<input type="hidden" name="page" value="<?php echo plugin_basename(__FILE__); ?>" />
+<input type="hidden" name="summary" value="summary" />
+<input type="hidden" name="user_id" value="<?php echo $user_id; ?>" />
+<?php if (!empty($status)) { ?>
+<input type="hidden" name="status" value="<?php echo $status; ?>" />
+<?php } ?>
+<?php submit_button(__('Summary', self::TEXT_DOMAIN), 'action', false, false, array('id' => "summary"));?>
+</form>
+</div>
+<?php } ?>
+
 <br class="clear" />
 </div>
 
@@ -660,7 +735,8 @@ jQuery(function(){setTimeout('get_ull_info()', 10000);});
 	<th scope="col" class="manage-column column-status"><?php _e('Status', self::TEXT_DOMAIN); ?></th>
 	<th scope="col" class="manage-column column-ip"><?php _e('IP', self::TEXT_DOMAIN); ?></th>
 	<th scope="col" class="manage-column column-agent"><?php _e('User Agent', self::TEXT_DOMAIN); ?></th>
-	<th scope="col" class="manage-column column-errors" style=""><?php _e('Errors', self::TEXT_DOMAIN); ?></th>
+	<th scope="col" class="manage-column column-errors"><?php _e('Errors', self::TEXT_DOMAIN); ?></th>
+	<th scope="col" class="manage-column column-errors"><?php _e('Invalid User Name / Password', self::TEXT_DOMAIN); ?></th>
 	</tr>
 </thead>
 <tfoot>
@@ -672,7 +748,8 @@ jQuery(function(){setTimeout('get_ull_info()', 10000);});
 	<th scope="col" class="manage-column column-status"><?php _e('Status', self::TEXT_DOMAIN); ?></th>
 	<th scope="col" class="manage-column column-ip"><?php _e('IP', self::TEXT_DOMAIN); ?></th>
 	<th scope="col" class="manage-column column-agent"><?php _e('User Agent', self::TEXT_DOMAIN); ?></th>
-	<th scope="col" class="manage-column column-errors" style=""><?php _e('Errors', self::TEXT_DOMAIN); ?></th>
+	<th scope="col" class="manage-column column-errors"><?php _e('Errors', self::TEXT_DOMAIN); ?></th>
+	<th scope="col" class="manage-column column-errors"><?php _e('Invalid User Name / Password', self::TEXT_DOMAIN); ?></th>
 	</tr>
 </tfoot>
 
@@ -689,6 +766,10 @@ $user_login =
 	(is_array($errors) && isset($errors['user_login']))
 	? $errors['user_login']
 	: $row->user_login;
+$password = 
+	(is_array($errors) && isset($errors['user_login']) && isset($errors['user_password']))
+	? "{$errors['user_login']} / {$errors['user_password']}"
+	: '';
 $errors = 
 	(is_array($errors) && isset($errors['errors']))
 	? implode(', ', array_keys($errors['errors']))
@@ -703,6 +784,133 @@ $errors =
 <td class="ip column-ip"><?php echo trim(self::get_country_flag($row->activity_IP) . '<br>' . $row->activity_IP); ?></td>
 <td class="agent column-agent"><?php echo trim(self::get_browser_icon($row->activity_agent) . '<br>' . $ua); ?></td>
 <td class="errors column-errors"><?php echo $errors; ?></td>
+<td class="password column-errors"><?php echo $password; ?></td>
+</tr>
+<?php $row_num++; }?>
+</tbody>
+</table>
+
+<div class="tablenav">
+<div class="alignright tablenav-pages">
+<?php echo $page_links_text; ?>
+</div>
+<br class="clear" />
+</div>
+
+</div>
+<?php
+	}
+
+	private function summary_page(){
+		global $wpdb;
+
+		$err_message = '';
+		$user_id = $this->get_user_id();
+		$status  = $this->get_status();
+
+		// get total count
+		$sql =
+			"SELECT distinct `user_id`, `user_login`, `activity_status`, `activity_errors`, count(*) as `count`
+			FROM `{$this->ull_table}`
+			LEFT JOIN `{$wpdb->users}` ON `{$this->ull_table}`.`user_id` = `{$wpdb->users}`.`ID`
+			WHERE 1 = 1";
+		if ($user_id >= 0)
+			$sql .= $wpdb->prepare(" AND `user_id` = %d", $user_id);
+		if (!empty($status))
+			$sql .= $wpdb->prepare(" AND `activity_status` = %s", $status);
+		$sql .= " GROUP BY `user_id`, `user_login`, `activity_status`, `activity_errors`";
+		$total = intval($wpdb->get_var("SELECT count(*) from ({$sql}) as log"));
+
+		// Pagination
+		$page = abs(intval(isset($_GET['apage']) ? $_GET['apage'] : 1));
+		$start = ($page - 1) * self::LIST_PER_PAGE;
+		$page_links_text = $this->get_pagenation($total, self::LIST_PER_PAGE, $page, $start);
+
+		// get login log summary
+		$ull_summary = $wpdb->get_results($wpdb->prepare("{$sql} ORDER BY `count` DESC LIMIT %d,%d", $start, self::LIST_PER_PAGE));
+
+		$row_num = 0;
+?>
+<div class="wrap">
+<div id="icon-profile" class="icon32"></div>
+<h2><?php _e('Summary Login Log', self::TEXT_DOMAIN); ?></h2>
+<?php echo $err_message."€n"; ?>
+
+<div class="tablenav">
+<?php if (current_user_can('create_users')) { ?>
+<div class="alignleft actions">
+<form action="" method="get">
+<input type="hidden" name="page" value="<?php echo plugin_basename(__FILE__); ?>" />
+<input type="hidden" name="summary" value="summary" />
+<?php $this->filter_option($user_id, $status); ?>
+<?php submit_button(__('Apply Filters'), 'action', false, false, array('id' => "doaction"));?>
+</form>
+</div>
+<?php } ?>
+
+<div class="alignright tablenav-pages">
+<?php echo $page_links_text; ?>
+</div>
+
+<?php if (current_user_can('manage_options')) { ?>
+<div class="alignright tablenav-pages" style="margin-right:1em;">
+<form action="" method="GET">
+<input type="hidden" name="page" value="<?php echo plugin_basename(__FILE__); ?>" />
+<input type="hidden" name="user_id" value="<?php echo $user_id; ?>" />
+<?php if (!empty($status)) { ?>
+<input type="hidden" name="status" value="<?php echo $status; ?>" />
+<?php } ?>
+<?php submit_button(__('Login Log', self::TEXT_DOMAIN), 'action', false, false, array('id' => "login_log"));?>
+</form>
+<?php } ?>
+<br class="clear" />
+</div>
+
+<div class="clear"></div>
+
+<table class="widefat comments fixed" cellspacing="0">
+<thead>
+	<tr>
+	<th scope="col" class="manage-column column-username"><?php _e('User Name', self::TEXT_DOMAIN); ?></th>
+	<th scope="col" class="manage-column column-status"><?php _e('Status', self::TEXT_DOMAIN); ?></th>
+	<th scope="col" class="manage-column column-errors"><?php _e('Errors', self::TEXT_DOMAIN); ?></th>
+	<th scope="col" class="manage-column column-errors"><?php _e('Invalid User Name / Password', self::TEXT_DOMAIN); ?></th>
+	<th scope="col" class="manage-column column-errors" style="text-align:right;"><?php _e('Count', self::TEXT_DOMAIN); ?></th>
+	</tr>
+</thead>
+<tfoot>
+	<tr>
+	<th scope="col" class="manage-column column-username"><?php _e('User Name', self::TEXT_DOMAIN); ?></th>
+	<th scope="col" class="manage-column column-status"><?php _e('Status', self::TEXT_DOMAIN); ?></th>
+	<th scope="col" class="manage-column column-errors"><?php _e('Errors', self::TEXT_DOMAIN); ?></th>
+	<th scope="col" class="manage-column column-errors"><?php _e('Invalid User Name / Password', self::TEXT_DOMAIN); ?></th>
+	<th scope="col" class="manage-column column-errors" style="text-align:right;"><?php _e('Count', self::TEXT_DOMAIN); ?></th>
+	</tr>
+</tfoot>
+
+<tbody id="user-login-log">
+<?php foreach($ull_summary as $row) {?>
+<?php
+$errors = unserialize($row->activity_errors);
+$user_login =
+	(is_array($errors) && isset($errors['user_login']))
+	? $errors['user_login']
+	: $row->user_login;
+$password = 
+	(is_array($errors) && isset($errors['user_login']) && isset($errors['user_password']))
+	? "{$errors['user_login']} / {$errors['user_password']}"
+	: '';
+$errors = 
+	(is_array($errors) && isset($errors['errors']))
+	? implode(', ', array_keys($errors['errors']))
+	: '';
+?>
+<tr id="log-<?php echo $row_num ?>">
+<td class="username column-username"><?php echo $user_login; ?></td>
+<td class="status column-status"><?php echo $row->activity_status; ?></td>
+<td class="errors column-errors"><?php echo $errors; ?></td>
+<td class="password column-errors"><?php echo $password; ?></td>
+<td class="count column-errors" style="text-align:right;"><?php echo $row->count; ?></td>
 </tr>
 <?php $row_num++; }?>
 </tbody>

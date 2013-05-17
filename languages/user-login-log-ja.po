@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: user-login-log\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2013-05-10 10:07+0900\n"
-"PO-Revision-Date: 2013-05-17 14:46+0900\n"
+"PO-Revision-Date: 2013-05-17 18:38+0900\n"
 "Last-Translator: wokamoto <wokamoto1973@gmail.com>\n"
 "Language-Team: JAPANESE <http://wppluginsj.sourceforge.jp/>\n"
 "Language: ja_JP\n"
@@ -155,3 +155,15 @@ msgstr "日前"
 
 msgid "Truncate"
 msgstr "消去"
+
+msgid "Summary"
+msgstr "サマリー"
+
+msgid "Summary Login Log"
+msgstr "ログイン履歴 (サマリー)"
+
+msgid "Invalid User Name / Password"
+msgstr "エラー時のユーザー名 / パスワード"
+
+msgid "Count"
+msgstr "合計"

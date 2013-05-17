@@ -145,3 +145,15 @@ msgstr ""
 
 msgid "Truncate"
 msgstr ""
+
+msgid "Summary"
+msgstr ""
+
+msgid "Summary Login Log"
+msgstr ""
+
+msgid "Invalid User Name / Password"
+msgstr ""
+
+msgid "Count"
+msgstr ""
