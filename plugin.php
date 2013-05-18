@@ -4,7 +4,7 @@ Plugin Name: Crazy Bone
 Plugin URI: https://github.com/wokamoto/crazy-bone
 Description: Tracks user name, time of login, IP address and browser user agent.
 Author: wokamoto
-Version: 0.4.1
+Version: 0.4.2
 Author URI: http://dogmap.jp/
 Text Domain: user-login-log
 Domain Path: /languages/
@@ -195,17 +195,16 @@ CREATE TABLE `{$this->ull_table}` (
 		if (!is_wp_error($user))
 			return;
 		$errors = $user->errors;
+		$args = array('errors' => $errors);
 		if (array_key_exists('invalid_username', $errors)) {
 			$user_id = 0;
+			$args['user_login']    = $user_login;
+			$args['user_password'] = $user_password;
 		} else {
 			$user = get_user_by('login', $user_login);
 			$user_id = isset($user->ID) ? $user->ID : 0;
 		}
-		$this->logging($user_id, 'login_error', array(
-			'errors' => $errors,
-			'user_login' => $user_login,
-			'user_password' => $user_password,
-			));
+		$this->logging($user_id, 'login_error', $args);
 	}
 
 	public function user_logout_log() {
@@ -737,7 +736,9 @@ jQuery(function(){setTimeout('get_ull_info()', 10000);});
 	<th scope="col" class="manage-column column-ip"><?php _e('IP', self::TEXT_DOMAIN); ?></th>
 	<th scope="col" class="manage-column column-agent"><?php _e('User Agent', self::TEXT_DOMAIN); ?></th>
 	<th scope="col" class="manage-column column-errors"><?php _e('Errors', self::TEXT_DOMAIN); ?></th>
+<?php if ($user_id == 0) { ?>
 	<th scope="col" class="manage-column column-errors"><?php _e('Invalid User Name / Password', self::TEXT_DOMAIN); ?></th>
+<?php } ?>
 	</tr>
 </thead>
 <tfoot>
@@ -750,7 +751,9 @@ jQuery(function(){setTimeout('get_ull_info()', 10000);});
 	<th scope="col" class="manage-column column-ip"><?php _e('IP', self::TEXT_DOMAIN); ?></th>
 	<th scope="col" class="manage-column column-agent"><?php _e('User Agent', self::TEXT_DOMAIN); ?></th>
 	<th scope="col" class="manage-column column-errors"><?php _e('Errors', self::TEXT_DOMAIN); ?></th>
+<?php if ($user_id == 0) { ?>
 	<th scope="col" class="manage-column column-errors"><?php _e('Invalid User Name / Password', self::TEXT_DOMAIN); ?></th>
+<?php } ?>
 	</tr>
 </tfoot>
 
@@ -775,6 +778,8 @@ $errors =
 	(is_array($errors) && isset($errors['errors']))
 	? implode(', ', array_keys($errors['errors']))
 	: '';
+if ($errors != 'invalid_username')
+	$password = '';
 ?>
 <tr id="log-<?php echo $row_num ?>">
 <?php if ($user_id <= 0) { ?>
@@ -785,7 +790,9 @@ $errors =
 <td class="ip column-ip"><?php echo trim(self::get_country_flag($row->activity_IP, '', true) . '<br>' . $row->activity_IP); ?></td>
 <td class="agent column-agent"><?php echo trim(self::get_browser_icon($row->activity_agent) . '<br>' . $ua); ?></td>
 <td class="errors column-errors"><?php echo $errors; ?></td>
+<?php if ($user_id == 0) { ?>
 <td class="password column-errors"><?php echo $password; ?></td>
+<?php } ?>
 </tr>
 <?php $row_num++; }?>
 </tbody>
@@ -875,7 +882,9 @@ $errors =
 	<th scope="col" class="manage-column column-username"><?php _e('User Name', self::TEXT_DOMAIN); ?></th>
 	<th scope="col" class="manage-column column-status"><?php _e('Status', self::TEXT_DOMAIN); ?></th>
 	<th scope="col" class="manage-column column-errors"><?php _e('Errors', self::TEXT_DOMAIN); ?></th>
+<?php if ($user_id == 0) { ?>
 	<th scope="col" class="manage-column column-errors"><?php _e('Invalid User Name / Password', self::TEXT_DOMAIN); ?></th>
+<?php } ?>
 	<th scope="col" class="manage-column column-errors" style="text-align:right;"><?php _e('Count', self::TEXT_DOMAIN); ?></th>
 	</tr>
 </thead>
@@ -884,7 +893,9 @@ $errors =
 	<th scope="col" class="manage-column column-username"><?php _e('User Name', self::TEXT_DOMAIN); ?></th>
 	<th scope="col" class="manage-column column-status"><?php _e('Status', self::TEXT_DOMAIN); ?></th>
 	<th scope="col" class="manage-column column-errors"><?php _e('Errors', self::TEXT_DOMAIN); ?></th>
+<?php if ($user_id == 0) { ?>
 	<th scope="col" class="manage-column column-errors"><?php _e('Invalid User Name / Password', self::TEXT_DOMAIN); ?></th>
+<?php } ?>
 	<th scope="col" class="manage-column column-errors" style="text-align:right;"><?php _e('Count', self::TEXT_DOMAIN); ?></th>
 	</tr>
 </tfoot>
@@ -905,12 +916,16 @@ $errors =
 	(is_array($errors) && isset($errors['errors']))
 	? implode(', ', array_keys($errors['errors']))
 	: '';
+if ($errors != 'invalid_username')
+	$password = '';
 ?>
 <tr id="log-<?php echo $row_num ?>">
 <td class="username column-username"><?php echo $user_login; ?></td>
 <td class="status column-status"><?php echo $row->activity_status; ?></td>
 <td class="errors column-errors"><?php echo $errors; ?></td>
+<?php if ($user_id == 0) { ?>
 <td class="password column-errors"><?php echo $password; ?></td>
+<?php } ?>
 <td class="count column-errors" style="text-align:right;"><?php echo $row->count; ?></td>
 </tr>
 <?php $row_num++; }?>

@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=9S8AJ
 Tags: log, login, users
 Requires at least: 3.5
 Tested up to: 3.5.1
-Stable tag: 0.4.1
+Stable tag: 0.4.2
 
 Tracks user name, time of login, IP address and browser user agent.
 
