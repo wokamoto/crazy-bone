@@ -34,7 +34,7 @@ if (!class_exists('DetectBrowsersController'))
 if (!class_exists('DetectCountriesController'))
 	require_once( dirname(__FILE__) . '/includes/detect_countries.php' );
 
-load_plugin_textdomain(user_login_log::TEXT_DOMAIN, false, dirname(plugin_basename(__FILE__)) . '/languages/');
+load_plugin_textdomain(crazy_bone::TEXT_DOMAIN, false, dirname(plugin_basename(__FILE__)) . '/languages/');
 
 class crazy_bone {
 	const USER_META_KEY = 'user_login_log';
