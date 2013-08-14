@@ -4,7 +4,7 @@ Plugin Name: Crazy Bone
 Plugin URI: https://github.com/wokamoto/crazy-bone
 Description: Tracks user name, time of login, IP address and browser user agent.
 Author: wokamoto
-Version: 0.4.2
+Version: 0.5.0
 Author URI: http://dogmap.jp/
 Text Domain: user-login-log
 Domain Path: /languages/
@@ -36,11 +36,13 @@ if (!class_exists('DetectCountriesController'))
 
 load_plugin_textdomain(user_login_log::TEXT_DOMAIN, false, dirname(plugin_basename(__FILE__)) . '/languages/');
 
-class user_login_log {
+class crazy_bone {
 	const USER_META_KEY = 'user_login_log';
 	const TEXT_DOMAIN   = 'user-login-log';
 	const LIST_PER_PAGE = 20;
 	const DEBUG_MODE    = false;
+
+	const ADMIN_MENU_CAPABILITY = 'level_0';
 
 	const SEC_MINUITE   = 60;
 	const SEC_HOUR      = 3600;
@@ -52,8 +54,12 @@ class user_login_log {
 	private $admin_action;
 	private $plugin_version;
 
+	static $instance;
+
 	function __construct(){
 		global $wpdb;
+
+		self::$instance = $this;
 
 		$this->ull_table = $wpdb->prefix.$this->ull_table;
 		$this->admin_action = admin_url('profile.php') . '?page=' . plugin_basename(__FILE__);
@@ -61,24 +67,24 @@ class user_login_log {
 		$data = get_file_data(__FILE__, array('version' => 'Version'));
 		$this->plugin_version = isset($data['version']) ? $data['version'] : '';
 
-		add_action('wp_login', array(&$this, 'user_login_log'), 10, 2);
-		add_action('wp_authenticate', array(&$this, 'wp_authenticate_log'), 10, 2);
-		add_action('login_form_logout', array(&$this, 'user_logout_log'));
+		add_action('wp_login', array($this, 'user_login_log'), 10, 2);
+		add_action('wp_authenticate', array($this, 'wp_authenticate_log'), 10, 2);
+		add_action('login_form_logout', array($this, 'user_logout_log'));
 
-		add_action('admin_enqueue_scripts', array(&$this,'enqueue_scripts'));
-		add_action('wp_enqueue_scripts', array(&$this,'enqueue_scripts'));
+		add_action('admin_enqueue_scripts', array($this,'enqueue_scripts'));
+		add_action('wp_enqueue_scripts', array($this,'enqueue_scripts'));
 
-		add_action('admin_bar_init',  array(&$this, 'admin_bar_init'), 9999);
-		add_action('admin_menu', array(&$this,'add_admin_menu'));
+		add_action('admin_bar_init',  array($this, 'admin_bar_init'), 9999);
+		add_action('admin_menu', array($this,'add_admin_menu'));
 
-		add_action('wp_ajax_ull_info', array(&$this, 'ajax_info'));
-		add_action('wp_ajax_nopriv_ull_info', array(&$this, 'ajax_info'));
+		add_action('wp_ajax_ull_info', array($this, 'ajax_info'));
+		add_action('wp_ajax_nopriv_ull_info', array($this, 'ajax_info'));
 
-		add_action('wp_ajax_dismiss-ull-wp-pointer', array(&$this, 'ajax_dismiss'));
-		add_action('wp_ajax_nopriv_dismiss-ull-wp-pointer', array(&$this, 'ajax_dismiss'));
+		add_action('wp_ajax_dismiss-ull-wp-pointer', array($this, 'ajax_dismiss'));
+		add_action('wp_ajax_nopriv_dismiss-ull-wp-pointer', array($this, 'ajax_dismiss'));
 
-		register_activation_hook(__FILE__, array(&$this, 'activate'));
-		register_deactivation_hook(__FILE__, array(&$this, 'deactivate'));
+		register_activation_hook(__FILE__, array($this, 'activate'));
+		register_deactivation_hook(__FILE__, array($this, 'deactivate'));
 	}
 
 	public function activate(){
@@ -125,14 +131,21 @@ CREATE TABLE `{$this->ull_table}` (
 	}
 
 	public function admin_bar_init() {
-		add_action('admin_bar_menu',  array(&$this, 'customize_admin_bar_menu'), 9999);
+		add_action('admin_bar_menu',  array($this, 'customize_admin_bar_menu'), 9999);
 		wp_enqueue_style('user_login_log', plugins_url('css/user_login_log.css', __FILE__), array(), $this->plugin_version);
 
-		add_action('admin_footer', array(&$this, 'footer_js'));
-		add_action('wp_footer',    array(&$this, 'footer_js'));
+		$realtime_check = apply_filters('crazy_bone::realtime_check', true);
+		if ($realtime_check) {
+			add_action('admin_footer', array($this, 'footer_js'));
+			add_action('wp_footer',    array($this, 'footer_js'));
+		}
 	}
 
 	public function customize_admin_bar_menu($wp_admin_bar){
+		$capability = apply_filters('crazy_bone::admin_menu_capability', self::ADMIN_MENU_CAPABILITY);
+		if (!current_user_can($capability))
+			return;
+
 		$title = $this->login_info();
 		if ($title === false)
 			return;
@@ -356,6 +369,8 @@ jQuery(function(){setTimeout('get_ull_info()', 10000);});
 
 	// Add Admin Menu
 	public function add_admin_menu() {
+		$capability = apply_filters('crazy_bone::admin_menu_capability', self::ADMIN_MENU_CAPABILITY);
+
 		$parent = 'profile.php';
 		$page_title = __('Login Log', self::TEXT_DOMAIN);
 		$menu_title = $page_title;
@@ -364,7 +379,7 @@ jQuery(function(){setTimeout('get_ull_info()', 10000);});
 			$parent,
 			$page_title,
 			array($this,'option_page'),
-			'level_0',
+			$capability,
 			$menu_title,
 			$file
 			);
@@ -543,7 +558,7 @@ jQuery(function(){setTimeout('get_ull_info()', 10000);});
 		echo '<select name="user_id">'."\n";
 		printf('<option value="%d"%s>%s</option>'."\n", -1, $selected_user_id == -1 ? $selectd : '', __('All Users', self::TEXT_DOMAIN));
 		printf('<option value="%d"%s>%s</option>'."\n", 0, $selected_user_id == 0 ? $selectd : '', __('Unknown', self::TEXT_DOMAIN));
-		$users = $wpdb->get_results("select ID, user_login from `{$wpdb->users}` order by ID");
+		$users = $wpdb->get_results("select ID, user_login from `{$wpdb->users}` order by user_login");
 		foreach((array)$users as $user) {
 			printf('<option value="%d"%s>%s</option>'."\n", $user->ID, $selected_user_id == $user->ID ? $selectd : '', $user->user_login);
 		}
@@ -944,4 +959,4 @@ if ($errors != 'invalid_username')
 	}
 }
 
-new user_login_log();
+new crazy_bone();

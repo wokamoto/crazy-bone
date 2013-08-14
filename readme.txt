@@ -3,8 +3,8 @@ Contributors: wokamoto, megumithemes
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=9S8AJCY7XB8F4&lc=JP&item_name=WordPress%20Plugins&item_number=wp%2dplugins&currency_code=JPY&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted
 Tags: log, login, users
 Requires at least: 3.5
-Tested up to: 3.5.1
-Stable tag: 0.4.2
+Tested up to: 3.6
+Stable tag: 0.5.0
 
 Tracks user name, time of login, IP address and browser user agent.
 
@@ -33,6 +33,10 @@ none
 1. The admin page
 
 == Changelog == 
+
+**0.5.0 - Aug. 14, 2013**
+
+Added custom filter ( 'crazy_bone::admin_menu_capability', 'crazy_bone::realtime_check' )
 
 **0.4.0 - May 17, 2013**
 
