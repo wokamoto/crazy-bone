@@ -4,7 +4,7 @@ Plugin Name: Crazy Bone
 Plugin URI: https://github.com/wokamoto/crazy-bone
 Description: Tracks user name, time of login, IP address and browser user agent.
 Author: wokamoto
-Version: 0.5.0
+Version: 0.5.1
 Author URI: http://dogmap.jp/
 Text Domain: user-login-log
 Domain Path: /languages/
@@ -41,6 +41,7 @@ class crazy_bone {
 	const TEXT_DOMAIN   = 'user-login-log';
 	const LIST_PER_PAGE = 20;
 	const DEBUG_MODE    = false;
+	const OPTION_NAME   = 'user-login-log';
 
 	const ADMIN_MENU_CAPABILITY = 'level_0';
 
@@ -53,6 +54,7 @@ class crazy_bone {
 	private $ull_table = 'user_login_log';
 	private $admin_action;
 	private $plugin_version;
+	private $options;
 
 	static $instance;
 
@@ -66,6 +68,10 @@ class crazy_bone {
 
 		$data = get_file_data(__FILE__, array('version' => 'Version'));
 		$this->plugin_version = isset($data['version']) ? $data['version'] : '';
+
+		$this->options = get_option( self::OPTION_NAME, array() );
+		if (!is_array($this->options))
+			$this->options = array('installed' => false);
 
 		add_action('wp_login', array($this, 'user_login_log'), 10, 2);
 		add_action('wp_authenticate', array($this, 'wp_authenticate_log'), 10, 2);
@@ -89,6 +95,9 @@ class crazy_bone {
 
 	public function activate(){
 		global $wpdb;
+
+		if (isset($this->options['installed']) && $this->options['installed'])
+			return;
 
 		if ($wpdb->get_var("show tables like '{$this->ull_table}'") != $this->ull_table)
 			$this->create_table();
@@ -119,6 +128,9 @@ CREATE TABLE `{$this->ull_table}` (
  KEY `country_code` (`country_code`)
 )");
 		}
+
+		$this->options['installed'] = true;
+		update_option( self::OPTION_NAME, $this->options );
 	}
 
 	public function enqueue_scripts(){
@@ -842,6 +854,7 @@ if ($errors != 'invalid_username')
 		if (!empty($status))
 			$sql .= $wpdb->prepare(" AND `activity_status` = %s", $status);
 		$sql .= " GROUP BY `user_id`, `user_login`, `activity_status`, `activity_errors`";
+		$sql .= " ORDER BY `user_login`, `user_id`";
 		$total = intval($wpdb->get_var("SELECT count(*) from ({$sql}) as log"));
 
 		// Pagination
