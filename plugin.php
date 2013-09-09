@@ -72,6 +72,8 @@ class crazy_bone {
 		$this->options = get_option( self::OPTION_NAME, array() );
 		if (!is_array($this->options))
 			$this->options = array('installed' => false);
+		if (!isset($this->options['installed']) || !$this->options['installed'])
+			$this->activate();
 
 		add_action('wp_login', array($this, 'user_login_log'), 10, 2);
 		add_action('wp_authenticate', array($this, 'wp_authenticate_log'), 10, 2);
@@ -104,6 +106,7 @@ class crazy_bone {
 	}
 
 	public function deactivate(){
+		delete_option( self::OPTION_NAME );
 	}
 
 	private function create_table(){
