@@ -78,6 +78,8 @@ class crazy_bone {
 		add_action('wp_login', array($this, 'user_login_log'), 10, 2);
 		add_action('wp_authenticate', array($this, 'wp_authenticate_log'), 10, 2);
 		add_action('login_form_logout', array($this, 'user_logout_log'));
+		add_action('wp_authenticate', array($this, 'wp_authenticate_log'), 10, 2);
+		add_action('login_form_logout', array($this, 'user_logout_log'));
 
 		add_action('admin_enqueue_scripts', array($this,'enqueue_scripts'));
 		add_action('wp_enqueue_scripts', array($this,'enqueue_scripts'));
@@ -214,6 +216,16 @@ CREATE TABLE `{$this->ull_table}` (
 
 	public function user_login_log($user_login, $user) {
 		$this->logging($user->ID, 'login');
+	}
+
+	public function cookie_expired_log($cookie_elements) {
+		$user = get_userdatabylogin($cookie_elements['username']);
+		$this->logging($user->ID, 'cookie_expired');
+	}
+
+	public function cookie_bad_hash_log($cookie_elements) {
+		$user = get_userdatabylogin($cookie_elements['username']);
+		$this->logging($user->ID, 'cookie_bad_hash');
 	}
 
 	function wp_authenticate_log($user_login, $user_password) {
