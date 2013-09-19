@@ -78,8 +78,8 @@ class crazy_bone {
 		add_action('wp_login', array($this, 'user_login_log'), 10, 2);
 		add_action('wp_authenticate', array($this, 'wp_authenticate_log'), 10, 2);
 		add_action('login_form_logout', array($this, 'user_logout_log'));
-		add_action('wp_authenticate', array($this, 'wp_authenticate_log'), 10, 2);
-		add_action('login_form_logout', array($this, 'user_logout_log'));
+		add_action('auth_cookie_expired', array($this, 'cookie_expired_log'), 10, 2);
+		add_action('auth_cookie_bad_hash', array($this, 'cookie_bad_hash_log'), 10, 2);
 
 		add_action('admin_enqueue_scripts', array($this,'enqueue_scripts'));
 		add_action('wp_enqueue_scripts', array($this,'enqueue_scripts'));
