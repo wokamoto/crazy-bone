@@ -869,7 +869,7 @@ if ($errors != 'invalid_username')
 		if (!empty($status))
 			$sql .= $wpdb->prepare(" AND `activity_status` = %s", $status);
 		$sql .= " GROUP BY `user_id`, `user_login`, `activity_status`, `activity_errors`";
-		$sql .= " ORDER BY `user_login`, `user_id`";
+		$sql .= " ORDER BY `count` DESC, `user_login`, `user_id`";
 		$total = intval($wpdb->get_var("SELECT count(*) from ({$sql}) as log"));
 
 		// Pagination
@@ -878,7 +878,7 @@ if ($errors != 'invalid_username')
 		$page_links_text = $this->get_pagenation($total, self::LIST_PER_PAGE, $page, $start);
 
 		// get login log summary
-		$ull_summary = $wpdb->get_results($wpdb->prepare("{$sql} ORDER BY `count` DESC LIMIT %d,%d", $start, self::LIST_PER_PAGE));
+		$ull_summary = $wpdb->get_results($wpdb->prepare("{$sql} LIMIT %d,%d", $start, self::LIST_PER_PAGE));
 
 		$row_num = 0;
 ?>
