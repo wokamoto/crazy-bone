@@ -3,8 +3,8 @@ Contributors: wokamoto, megumithemes
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=9S8AJCY7XB8F4&lc=JP&item_name=WordPress%20Plugins&item_number=wp%2dplugins&currency_code=JPY&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted
 Tags: log, login, users
 Requires at least: 3.5
-Tested up to: 3.6.1
-Stable tag: 0.5.2
+Tested up to: 4.0
+Stable tag: 0.5.3
 
 Tracks user name, time of login, IP address and browser user agent.
 
@@ -33,6 +33,9 @@ none
 1. The admin page
 
 == Changelog == 
+
+**0.5.3 - Oct. 20, 2014**
+source code refactoring.
 
 **0.5.2 - Oct. 23, 2013**
 action hook fix, sql syntax fix

@@ -4,7 +4,7 @@ Plugin Name: Crazy Bone
 Plugin URI: https://github.com/wokamoto/crazy-bone
 Description: Tracks user name, time of login, IP address and browser user agent.
 Author: wokamoto
-Version: 0.5.2
+Version: 0.5.3
 Author URI: http://dogmap.jp/
 Text Domain: user-login-log
 Domain Path: /languages/
@@ -34,6 +34,13 @@ if (!class_exists('DetectBrowsersController'))
 if (!class_exists('DetectCountriesController'))
 	require_once( dirname(__FILE__) . '/includes/detect_countries.php' );
 
+$crazy_bone = crazy_bone::get_instance();
+$crazy_bone->init();
+$crazy_bone->add_action();
+
+register_activation_hook(__FILE__, array($crazy_bone, 'activate'));
+register_deactivation_hook(__FILE__, array($crazy_bone, 'deactivate'));
+
 load_plugin_textdomain(crazy_bone::TEXT_DOMAIN, false, dirname(plugin_basename(__FILE__)) . '/languages/');
 
 class crazy_bone {
@@ -58,7 +65,19 @@ class crazy_bone {
 
 	static $instance;
 
-	function __construct(){
+	private function __construct() {}
+
+	public static function get_instance() {
+		if( !isset( self::$instance ) ) {
+			$c = __CLASS__;
+			self::$instance = new $c();
+		}
+
+		return self::$instance;
+	}
+
+	// 初期化
+	public function init(){
 		global $wpdb;
 
 		self::$instance = $this;
@@ -74,7 +93,10 @@ class crazy_bone {
 			$this->options = array('installed' => false);
 		if (!isset($this->options['installed']) || !$this->options['installed'])
 			$this->activate();
+	}
 
+	// フックの登録
+	public function add_action(){
 		add_action('wp_login', array($this, 'user_login_log'), 10, 2);
 		add_action('wp_authenticate', array($this, 'wp_authenticate_log'), 10, 2);
 		add_action('login_form_logout', array($this, 'user_logout_log'));
@@ -92,9 +114,6 @@ class crazy_bone {
 
 		add_action('wp_ajax_dismiss-ull-wp-pointer', array($this, 'ajax_dismiss'));
 		add_action('wp_ajax_nopriv_dismiss-ull-wp-pointer', array($this, 'ajax_dismiss'));
-
-		register_activation_hook(__FILE__, array($this, 'activate'));
-		register_deactivation_hook(__FILE__, array($this, 'deactivate'));
 	}
 
 	public function activate(){
@@ -219,13 +238,17 @@ CREATE TABLE `{$this->ull_table}` (
 	}
 
 	public function cookie_expired_log($cookie_elements) {
-		$user = get_userdatabylogin($cookie_elements['username']);
-		$this->logging($user->ID, 'cookie_expired');
+        if ( function_exists('get_userdatabylogin') ) {
+		    $user = get_userdatabylogin($cookie_elements['username']);
+		    $this->logging($user->ID, 'cookie_expired');
+        }
 	}
 
 	public function cookie_bad_hash_log($cookie_elements) {
-		$user = get_userdatabylogin($cookie_elements['username']);
-		$this->logging($user->ID, 'cookie_bad_hash');
+        if ( function_exists('get_userdatabylogin') ) {
+		    $user = get_userdatabylogin($cookie_elements['username']);
+		    $this->logging($user->ID, 'cookie_bad_hash');
+        }
 	}
 
 	function wp_authenticate_log($user_login, $user_password) {
@@ -986,5 +1009,3 @@ if ($errors != 'invalid_username')
 <?php
 	}
 }
-
-new crazy_bone();
