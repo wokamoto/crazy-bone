@@ -4,7 +4,7 @@ Plugin Name: Crazy Bone
 Plugin URI: https://github.com/wokamoto/crazy-bone
 Description: Tracks user name, time of login, IP address and browser user agent.
 Author: wokamoto
-Version: 0.5.3
+Version: 0.5.4
 Author URI: http://dogmap.jp/
 Text Domain: user-login-log
 Domain Path: /languages/
@@ -13,7 +13,7 @@ License:
  Released under the GPL license
   http://www.gnu.org/copyleft/gpl.html
 
-  Copyright 2013 (email : wokamoto1973@gmail.com)
+  Copyright 2013-2014 (email : wokamoto1973@gmail.com)
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -76,7 +76,7 @@ class crazy_bone {
 		return self::$instance;
 	}
 
-	// 初期化
+	// initialize
 	public function init(){
 		global $wpdb;
 
@@ -95,7 +95,7 @@ class crazy_bone {
 			$this->activate();
 	}
 
-	// フックの登録
+	// added action
 	public function add_action(){
 		add_action('wp_login', array($this, 'user_login_log'), 10, 2);
 		add_action('wp_authenticate', array($this, 'wp_authenticate_log'), 10, 2);
@@ -453,7 +453,9 @@ jQuery(function(){setTimeout('get_ull_info()', 10000);});
 
 	// Detect Country
 	public static function detect_country($ip) {
-		$detect_countries = new DetectCountriesController();
+		static $detect_countries;
+		if ( !isset($detect_countries) )
+			$detect_countries = new DetectCountriesController();
 		list($country_name, $country_code) = $detect_countries->get_info($ip);
 		if ( empty($country_code) )
 			$country_code = __('UNKNOWN', self::TEXT_DOMAIN);
@@ -467,7 +469,9 @@ jQuery(function(){setTimeout('get_ull_info()', 10000);});
 
 	// Detect Browser
 	public static function detect_browser($ua) {
-		$detect_browsers = new DetectBrowsersController();
+		static $detect_browsers;
+		if ( !isset($detect_browsers) )
+			$detect_browsers = new DetectBrowsersController();
 		list($browser_name, $browser_code, $browser_ver, $os_name, $os_code, $os_ver, $pda_name, $pda_code, $pda_ver) = $detect_browsers->get_info($ua);
 		if (empty($os_code)) {
 			$os_name = !empty($pda_code) ? $pda_name : $browser_name;
@@ -498,53 +502,22 @@ jQuery(function(){setTimeout('get_ull_info()', 10000);});
 		return $time;
 	}
 
-	private function nice_time($dest) {
-		$dest = intval($dest);
+	private function nice_time($date) {
+		$dest = intval($date);
 		$sour = intval(func_num_args() == 1 ? strtotime($this->time()) : func_get_arg(1));
 		$nicetime = '';
-
 		$tt = $dest - $sour;
 
-		$year = intval($tt / self::SEC_YEAR);
-		if ($year < -1) {
-			$nicetime .= (!empty($nicetime) ? ' ' : '' ) . sprintf(__('%d years', self::TEXT_DOMAIN), abs($year));
-		} else if ($year == -1) {
-			$nicetime .= (!empty($nicetime) ? ' ' : '' ) . __('one year', self::TEXT_DOMAIN);
-		}
-
-		$month = intval($tt / self::SEC_MONTH);
-		if ($month < -1) {
-			$nicetime .= (!empty($nicetime) ? ' ' : '' ) . sprintf(__('%d months', self::TEXT_DOMAIN), abs($month));
-			$tt = ($dest + abs($year) * self::SEC_MONTH) - $sour;
-		} else if ($month == -1) {
-			$nicetime .= (!empty($nicetime) ? ' ' : '' ) . __('one month', self::TEXT_DOMAIN);
-			$tt = ($dest + self::SEC_MONTH) - $sour;
-		}
-
-		$day = intval($tt / self::SEC_DAY);
-		if ($day < -1) {
-			$nicetime .= (!empty($nicetime) ? ' ' : '' ) . sprintf(__('%d days', self::TEXT_DOMAIN), abs($day));
-		} else if ($day == -1) {
-			$nicetime .= (!empty($nicetime) ? ' ' : '' ) . __('one day', self::TEXT_DOMAIN);
-		}
-
-		$hour = intval($tt / self::SEC_HOUR);
-		if ($hour  < -1) {
-			$nicetime .= (!empty($nicetime) ? ' ' : '' ) . sprintf(__('%d hours', self::TEXT_DOMAIN), abs($hour));
-			$tt = ($dest + abs($hour) * self::SEC_HOUR) - $sour;
-		} else if ($hour == -1) {
-			$nicetime .= (!empty($nicetime) ? ' ' : '' ) . __('one hour', self::TEXT_DOMAIN);
-			$tt = ($dest + self::SEC_HOUR) - $sour;
-		}
-
 		$minute = intval($tt / self::SEC_MINUITE);
-		if ($minute < -1) {
-			$nicetime .= (!empty($nicetime) ? ' ' : '' ) . sprintf(__('%d minutes', self::TEXT_DOMAIN), abs($minute));
+		if ($minute < -60) {
+			$nicetime .= date( get_option('date_format').' '.get_option('time_format'), $date );
+		} elseif ($minute < -1) {
+			$nicetime .= sprintf(__('%s ago.', self::TEXT_DOMAIN), (!empty($nicetime) ? ' ' : '' ) . sprintf(__('%d minutes', self::TEXT_DOMAIN), abs($minute)));
 		} else if ($minute == -1) {
-			$nicetime .= (!empty($nicetime) ? ' ' : '' ) . __('one minute', self::TEXT_DOMAIN);
+			$nicetime .= sprintf(__('%s ago.', self::TEXT_DOMAIN), (!empty($nicetime) ? ' ' : '' ) . __('one minute', self::TEXT_DOMAIN));
 		}
 
-		return empty($nicetime) ? __('Just now!', self::TEXT_DOMAIN) : sprintf(__('%s ago.', self::TEXT_DOMAIN), $nicetime);
+		return empty($nicetime) ? __('Just now!', self::TEXT_DOMAIN) : $nicetime;
 	}
 
 	public static function icon_img_tag($src, $alt, $title, $style = 'width:16px;height:16px;', $class = '') {

@@ -34,11 +34,16 @@ class DetectCountriesController {
 	const IP2C_BIN_FILE = 'ip-to-country.bin';
 	const IP2C_VER_FILE = 'db.version';
 
+	static $instance;
 
 	/**********************************************************
 	* Constructor
 	***********************************************************/
-	function __construct() {
+	public function __construct() {
+		$this->init();
+	}
+
+	public function init() {
 		// Check ip-to-country.bin file
 		$ip2c_bin_file = dirname(__FILE__) . '/ip2c/' .self::IP2C_BIN_FILE;
 		if ( !file_exists($ip2c_bin_file) ) {
@@ -48,6 +53,9 @@ class DetectCountriesController {
 	}
 
 	public function get_info($ip) {
+		if ( !isset($this->ip2c) )
+			$this->init();
+
 		$res   = $this->ip2c->get_country($ip);
 		$ccode = $res != false ? $res['id2'] : null;
 		unset($res);

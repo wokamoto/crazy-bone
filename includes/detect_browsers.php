@@ -25,24 +25,22 @@ License:
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+if (!class_exists('DetectBrowsers'))
+	require_once 'class-detect-browsers.php';
+
 class DetectBrowsersController {
-	var $_ua_cache = array();
+	private $_ua_cache = array();
 
 	/**********************************************************
 	* Constructor
 	***********************************************************/
-	function DetectBrowsersController() {
-		$this->__construct();
-	}
-	function __construct() {
-		if (!class_exists('DetectBrowsers'))
-			require_once 'class-detect-browsers.php';
+	public function __construct() {
 	}
 
 	/**********************************************************
 	* Get Information from user agent
 	***********************************************************/
-	function get_info($ua) {
+	public function get_info($ua) {
 		if ( isset($this->_ua_cache[$ua]) )
 			return $this->_ua_cache[$ua];
 
