@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=9S8AJ
 Tags: log, login, users
 Requires at least: 3.5
 Tested up to: 4.3.1
-Stable tag: 0.5.6
+Stable tag: 0.6.0
 
 Tracks user name, time of login, IP address and browser user agent.
 
@@ -33,6 +33,12 @@ none
 1. The admin page
 
 == Changelog ==
+
+**0.6.0 - Dec. 5, 2016
+
+fixed XSS.
+Unauthenticated attackers can inject html/js into User-Agent HTTP request header resulting in persistent XSS on page /wp-admin/users.php?page=crazy-bone%2Fplugin.php.
+
 
 **0.5.6 - Dec. 5, 2016
 

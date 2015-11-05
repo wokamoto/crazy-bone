@@ -4,7 +4,7 @@ Plugin Name: Crazy Bone
 Plugin URI: https://github.com/wokamoto/crazy-bone
 Description: Tracks user name, time of login, IP address and browser user agent.
 Author: wokamoto
-Version: 0.5.6
+Version: 0.6.0
 Author URI: http://dogmap.jp/
 Text Domain: user-login-log
 Domain Path: /languages/
@@ -503,20 +503,7 @@ jQuery(function(){setTimeout('get_ull_info()', 10000);});
 	}
 
 	private function nice_time($date) {
-		$dest = intval($date);
-		$sour = intval(func_num_args() == 1 ? strtotime($this->time()) : func_get_arg(1));
-		$nicetime = '';
-		$tt = $dest - $sour;
-
-		$minute = intval($tt / self::SEC_MINUITE);
-		if ($minute < -60) {
-			$nicetime .= date( get_option('date_format').' '.get_option('time_format'), $date );
-		} elseif ($minute < -1) {
-			$nicetime .= sprintf(__('%s ago.', self::TEXT_DOMAIN), (!empty($nicetime) ? ' ' : '' ) . sprintf(__('%d minutes', self::TEXT_DOMAIN), abs($minute)));
-		} else if ($minute == -1) {
-			$nicetime .= sprintf(__('%s ago.', self::TEXT_DOMAIN), (!empty($nicetime) ? ' ' : '' ) . __('one minute', self::TEXT_DOMAIN));
-		}
-
+		$nicetime = human_time_diff($date, current_time('timestamp'));
 		return empty($nicetime) ? __('Just now!', self::TEXT_DOMAIN) : $nicetime;
 	}
 
@@ -823,13 +810,13 @@ if ($errors != 'invalid_username')
 <?php if ($user_id <= 0) { ?>
 <td class="username column-username"><?php echo $user_login; ?></td>
 <?php } ?>
-<td class="date column-date"><?php echo $row->activity_date; ?></td>
-<td class="status column-status"><?php echo $row->activity_status; ?></td>
-<td class="ip column-ip"><?php echo trim(self::get_country_flag($row->activity_IP, '', true) . '<br>' . $row->activity_IP); ?></td>
-<td class="agent column-agent"><?php echo trim(self::get_browser_icon($row->activity_agent) . '<br>' . $ua); ?></td>
-<td class="errors column-errors"><?php echo $errors; ?></td>
+<td class="date column-date"><?php echo esc_html($row->activity_date); ?></td>
+<td class="status column-status"><?php echo esc_html($row->activity_status); ?></td>
+<td class="ip column-ip"><?php echo trim(self::get_country_flag($row->activity_IP, '', true) . '<br>' . esc_html($row->activity_IP)); ?></td>
+<td class="agent column-agent"><?php echo trim(self::get_browser_icon($row->activity_agent) . '<br>' . esc_html($ua)); ?></td>
+<td class="errors column-errors"><?php echo esc_html($errors); ?></td>
 <?php if ($user_id == 0) { ?>
-<td class="password column-errors"><?php echo $password; ?></td>
+<td class="password column-errors"><?php echo esc_html($password); ?></td>
 <?php } ?>
 </tr>
 <?php $row_num++; }?>
@@ -959,13 +946,13 @@ if ($errors != 'invalid_username')
 	$password = '';
 ?>
 <tr id="log-<?php echo $row_num ?>">
-<td class="username column-username"><?php echo $user_login; ?></td>
-<td class="status column-status"><?php echo $row->activity_status; ?></td>
-<td class="errors column-errors"><?php echo $errors; ?></td>
+<td class="username column-username"><?php echo esc_html($user_login); ?></td>
+<td class="status column-status"><?php echo esc_html($row->activity_status); ?></td>
+<td class="errors column-errors"><?php echo esc_html($errors); ?></td>
 <?php if ($user_id == 0) { ?>
-<td class="password column-errors"><?php echo $password; ?></td>
+<td class="password column-errors"><?php echo esc_html($password); ?></td>
 <?php } ?>
-<td class="count column-errors" style="text-align:right;"><?php echo $row->count; ?></td>
+<td class="count column-errors" style="text-align:right;"><?php echo esc_html($row->count); ?></td>
 </tr>
 <?php $row_num++; }?>
 </tbody>
