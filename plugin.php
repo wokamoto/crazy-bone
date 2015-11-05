@@ -4,7 +4,7 @@ Plugin Name: Crazy Bone
 Plugin URI: https://github.com/wokamoto/crazy-bone
 Description: Tracks user name, time of login, IP address and browser user agent.
 Author: wokamoto
-Version: 0.5.5
+Version: 0.5.6
 Author URI: http://dogmap.jp/
 Text Domain: user-login-log
 Domain Path: /languages/
