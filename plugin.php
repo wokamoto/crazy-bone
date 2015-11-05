@@ -379,7 +379,7 @@ CREATE TABLE `{$this->ull_table}` (
 			"</p>",
 			__('Caution!', self::TEXT_DOMAIN),
 			__('Someone has logged in from another IP.', self::TEXT_DOMAIN),
-			__("The someone's IP address :", self::TEXT_DOMAIN),
+			__("The someone\\'s IP address :", self::TEXT_DOMAIN),
 			__('Your current IP address :', self::TEXT_DOMAIN)
 			);
 ?>
