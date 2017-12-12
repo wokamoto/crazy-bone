@@ -17,7 +17,7 @@ class ip2country
 	 * ip2country(String $file, true) will USE caching with default file location
 	 * ip2country(Boolean true) will USE caching with default file location
 	 */
-	function ip2country($bin_file = './ip-to-country.bin', $caching = false) 
+	function __construct($bin_file = './ip-to-country.bin', $caching = false) 
 	{
 		if (is_bool($bin_file)) {
 			// use $bin_file as caching indicator
